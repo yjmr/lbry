@@ -4,7 +4,7 @@ from lbrynet.extras.wallet.transaction import Transaction
 from lbrynet.error import InsufficientFundsError
 from lbrynet.schema.claim import ClaimDict
 
-from integration.testcase import CommandTestCase
+from lbrynet.testcase import CommandTestCase
 
 
 class ClaimCommands(CommandTestCase):

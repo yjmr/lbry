@@ -2,9 +2,8 @@ import asyncio
 import logging
 import os
 
-from integration.testcase import CommandTestCase
+from lbrynet.testcase import CommandTestCase
 from lbrynet.blob_exchange.downloader import BlobDownloader
-from lbrynet.error import InsufficientFundsError
 
 
 class FileCommands(CommandTestCase):
