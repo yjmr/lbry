@@ -5,7 +5,6 @@ import logging
 from binascii import unhexlify
 
 import lbrynet.extras.wallet
-from lbrynet.schema.claim import ClaimDict
 
 from torba.testcase import IntegrationTestCase
 
