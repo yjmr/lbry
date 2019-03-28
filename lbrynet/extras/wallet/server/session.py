@@ -303,6 +303,12 @@ class LBRYElectrumX(ElectrumX):
             return self.normalize_name(name) == claim['normalized_name']
         return name == claim['name']
 
+    def construct_canonical_url(self, claim_name, claim_id):
+        for i in range(len(claim_id)):
+            full_id = self.db.get_full_claim_id_from_canonical(claim_name, claim_id[:i+1]).decode()
+            if full_id == claim_id:
+                return "{}#{}".format(claim_name, claim_id[:i+1])
+
     async def claimtrie_getvalueforuri(self, block_hash, uri, known_certificates=None):
         # TODO: this thing is huge, refactor
         CLAIM_ID = "claim_id"
@@ -321,10 +327,14 @@ class LBRYElectrumX(ElectrumX):
 
             # TODO: this is also done on the else, refactor
             if parsed_uri.claim_id:
+                full_claim_id = parsed_uri.claim_id
                 if len(parsed_uri.claim_id) < CLAIM_ID_MAX_LENGTH:
-                    certificate_info = self.claimtrie_getpartialmatch(parsed_uri.name, parsed_uri.claim_id)
-                else:
-                    certificate_info = await self.claimtrie_getclaimbyid(parsed_uri.claim_id)
+                    full_claim_id = self.db.get_full_claim_id_from_canonical(
+                        parsed_uri.channel_name, parsed_uri.claim_id
+                    ).decode()
+                    # certificate_info = self.claimtrie_getpartialmatch(parsed_uri.name, parsed_uri.claim_id)
+
+                certificate_info = await self.claimtrie_getclaimbyid(full_claim_id)
                 if certificate_info and self.claim_matches_name(certificate_info, parsed_uri.name):
                     certificate = {'resolution_type': CLAIM_ID, 'result': certificate_info}
             elif parsed_uri.claim_sequence:
@@ -338,6 +348,9 @@ class LBRYElectrumX(ElectrumX):
 
             if certificate and 'claim_id' not in certificate['result']:
                 return result
+
+            cert_canonical_url = self.construct_canonical_url(certificate_info['name'], certificate_info['claim_id'])
+            certificate['result']['canonical_url'] = cert_canonical_url
 
             if certificate:
                 result['certificate'] = certificate
@@ -356,10 +369,14 @@ class LBRYElectrumX(ElectrumX):
         else:
             claim = None
             if parsed_uri.claim_id:
+                full_claim_id = parsed_uri.claim_id
                 if len(parsed_uri.claim_id) < CLAIM_ID_MAX_LENGTH:
-                    claim_info = self.claimtrie_getpartialmatch(parsed_uri.name, parsed_uri.claim_id)
-                else:
-                    claim_info = await self.claimtrie_getclaimbyid(parsed_uri.claim_id)
+                    full_claim_id = self.db.get_full_claim_id_from_canonical(
+                        parsed_uri.claim_name, parsed_uri.claim_id
+                    ).decode()
+                    # claim_info = self.claimtrie_getpartialmatch(parsed_uri.name, parsed_uri.claim_id)
+
+                claim_info = await self.claimtrie_getclaimbyid(full_claim_id)
                 if claim_info and self.claim_matches_name(claim_info, parsed_uri.name):
                     claim = {'resolution_type': CLAIM_ID, 'result': claim_info}
             elif parsed_uri.claim_sequence:
@@ -370,6 +387,10 @@ class LBRYElectrumX(ElectrumX):
                 claim_info = await self.claimtrie_getvalue(parsed_uri.name, block_hash)
                 if claim_info:
                     claim = {'resolution_type': WINNING, 'result': claim_info}
+
+            claim_canonical_url = self.construct_canonical_url(claim_info['name'], claim_info['claim_id'])
+            claim['result']['canonical_url'] = claim_canonical_url
+
             if (claim and
                     # is not an unclaimed winning name
                     (claim['resolution_type'] != WINNING or proof_has_winning_claim(claim['result']['proof']))):

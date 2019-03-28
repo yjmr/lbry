@@ -17,7 +17,7 @@ from lbrynet.schema.schema import NIST256p, NIST384p, SECP256k1, ECDSA_CURVES, C
 
 
 def validate_claim_id(claim_id):
-    if not len(claim_id) == 40:
+    if not len(claim_id) <= 40:
         raise Exception("Incorrect claimid length: %i" % len(claim_id))
     if isinstance(claim_id, bytes):
         claim_id = claim_id.decode('utf-8')
