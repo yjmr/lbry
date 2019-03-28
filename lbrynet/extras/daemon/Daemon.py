@@ -38,7 +38,7 @@ from lbrynet.schema.claim import Claim
 from lbrynet.schema.uri import parse_lbry_uri, URIParseError
 
 if typing.TYPE_CHECKING:
-    from lbrynet.blob.blob_manager import BlobFileManager
+    from lbrynet.blob.blob_manager import BlobManager
     from lbrynet.dht.node import Node
     from lbrynet.extras.daemon.Components import UPnPComponent
     from lbrynet.extras.daemon.exchange_rate_manager import ExchangeRateManager
@@ -285,7 +285,7 @@ class Daemon(metaclass=JSONRPCServerType):
         return self.component_manager.get_component(EXCHANGE_RATE_MANAGER_COMPONENT)
 
     @property
-    def blob_manager(self) -> typing.Optional['BlobFileManager']:
+    def blob_manager(self) -> typing.Optional['BlobManager']:
         return self.component_manager.get_component(BLOB_COMPONENT)
 
     @property
