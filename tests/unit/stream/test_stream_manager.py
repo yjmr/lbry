@@ -213,10 +213,10 @@ class TestStreamManager(BlobExchangeTestBase):
 
         self.stream_manager.analytics_manager._post = check_post
 
-        self.assertSetEqual(self.stream_manager.streams, set())
+        self.assertDictEqual(self.stream_manager.streams, {})
         stream = await self.stream_manager.download_stream_from_uri(self.uri, self.exchange_rate_manager)
         stream_hash = stream.stream_hash
-        self.assertSetEqual(self.stream_manager.streams, {stream})
+        self.assertDictEqual(self.stream_manager.streams, {stream.sd_hash: stream})
         self.assertTrue(stream.running)
         self.assertFalse(stream.finished)
         self.assertTrue(os.path.isfile(os.path.join(self.client_dir, "test_file")))
@@ -247,7 +247,7 @@ class TestStreamManager(BlobExchangeTestBase):
         self.assertEqual(stored_status, "finished")
 
         await self.stream_manager.delete_stream(stream, True)
-        self.assertSetEqual(self.stream_manager.streams, set())
+        self.assertDictEqual(self.stream_manager.streams, {})
         self.assertFalse(os.path.isfile(os.path.join(self.client_dir, "test_file")))
         stored_status = await self.client_storage.run_and_return_one_or_none(
             "select status from file where stream_hash=?", stream_hash
@@ -257,7 +257,7 @@ class TestStreamManager(BlobExchangeTestBase):
 
     async def _test_download_error_on_start(self, expected_error, timeout=None):
         with self.assertRaises(expected_error):
-            await self.stream_manager.download_stream_from_uri(self.uri, self.exchange_rate_manager, timeout=timeout)
+            await self.stream_manager.download_stream_from_uri(self.uri, timeout, self.exchange_rate_manager)
 
     async def _test_download_error_analytics_on_start(self, expected_error, timeout=None):
         received = []
@@ -321,7 +321,7 @@ class TestStreamManager(BlobExchangeTestBase):
         await self.setup_stream_manager(old_sort=old_sort)
         self.stream_manager.analytics_manager._post = check_post
 
-        self.assertSetEqual(self.stream_manager.streams, set())
+        self.assertDictEqual(self.stream_manager.streams, {})
         stream = await self.stream_manager.download_stream_from_uri(self.uri, self.exchange_rate_manager)
         await stream.downloader.stream_finished_event.wait()
         await asyncio.sleep(0, loop=self.loop)
@@ -333,8 +333,8 @@ class TestStreamManager(BlobExchangeTestBase):
         await self.client_blob_manager.setup()
         await self.stream_manager.start()
         self.assertEqual(1, len(self.stream_manager.streams))
-        self.assertEqual(stream.sd_hash, list(self.stream_manager.streams)[0].sd_hash)
-        self.assertEqual('stopped', list(self.stream_manager.streams)[0].status)
+        self.assertListEqual([stream.sd_hash], list(self.stream_manager.streams.keys()))
+        self.assertEqual('stopped', self.stream_manager.streams[self.sd_hash].status)
 
         sd_blob = self.client_blob_manager.get_blob(stream.sd_hash)
         self.assertTrue(sd_blob.file_exists)
