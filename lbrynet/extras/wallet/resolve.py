@@ -56,6 +56,7 @@ class Resolver:
                                                        height, depth,
                                                        transaction_class=self.transaction_class,
                                                        hash160_to_address=self.hash160_to_address)
+                    # certificate_result['canonical_url'] = certificate_response['canonical_url']
                     result['certificate'] = await self.parse_and_validate_claim_result(certificate_result,
                                                                                        raw=raw)
             elif certificate_resolution_type == "claim_id":
@@ -79,6 +80,8 @@ class Resolver:
                 result['success'] = False
                 result['uri'] = str(parsed_uri)
 
+            self.add_canonical_url(result['certificate'], certificate_response['canonical_url'])
+
         else:
             certificate = None
 
@@ -96,6 +99,7 @@ class Resolver:
                                                  height, depth,
                                                  transaction_class=self.transaction_class,
                                                  hash160_to_address=self.hash160_to_address)
+                    claim_result['canonical_url'] = claim_response['canonical_url']
                     result['claim'] = await self.parse_and_validate_claim_result(claim_result,
                                                                                  certificate,
                                                                                  raw)
@@ -286,6 +290,11 @@ class Resolver:
         if start_position > upper_bound:
             raise IndexError("claim %i greater than max %i" % (start_position, upper_bound))
         return page_generator, upper_bound
+
+    @staticmethod
+    def add_canonical_url(result_dict, url):
+        if result_dict.get('canonical_url') is None:
+            result_dict['canonical_url'] = url
 
 
 # Format amount to be decimal encoded string

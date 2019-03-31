@@ -235,6 +235,7 @@ class LBRYElectrumX(ElectrumX):
         height = get_from_possible_keys(claim, 'height', 'nHeight')
         effective_amount = get_from_possible_keys(claim, 'effective amount', 'nEffectiveAmount')
         valid_at_height = get_from_possible_keys(claim, 'valid at height', 'nValidAtHeight')
+        canonical_url = self.construct_canonical_url(name, claim_id)
 
         result = {
             "name": name,
@@ -248,7 +249,8 @@ class LBRYElectrumX(ElectrumX):
             "address": address,  # from index
             "supports": supports,
             "effective_amount": effective_amount,
-            "valid_at_height": valid_at_height
+            "valid_at_height": valid_at_height,
+            "canonical_url": canonical_url,
         }
         if 'claim_sequence' in claim:
             # TODO: ensure that lbrycrd #209 fills in this value
@@ -349,9 +351,6 @@ class LBRYElectrumX(ElectrumX):
             if certificate and 'claim_id' not in certificate['result']:
                 return result
 
-            cert_canonical_url = self.construct_canonical_url(certificate_info['name'], certificate_info['claim_id'])
-            certificate['result']['canonical_url'] = cert_canonical_url
-
             if certificate:
                 result['certificate'] = certificate
                 channel_id = certificate['result']['claim_id']
@@ -387,9 +386,6 @@ class LBRYElectrumX(ElectrumX):
                 claim_info = await self.claimtrie_getvalue(parsed_uri.name, block_hash)
                 if claim_info:
                     claim = {'resolution_type': WINNING, 'result': claim_info}
-
-            claim_canonical_url = self.construct_canonical_url(claim_info['name'], claim_info['claim_id'])
-            claim['result']['canonical_url'] = claim_canonical_url
 
             if (claim and
                     # is not an unclaimed winning name

@@ -68,17 +68,26 @@ class ResolveCommand(CommandTestCase):
 
         # check if resolution is proper
         resolve1 = await self.resolve("lbry://@kauffj#{}".format(claim_id1[0]))
-        resolve2 = await self.resolve("lbry://@kauffj#{}".format(claim_id1))
+        resolve2 = await self.resolve("lbry://@kauffj")
         x = resolve1["lbry://@kauffj#{}".format(claim_id1[0])]
-        y = resolve2["lbry://@kauffj#{}".format(claim_id1)]
-        self.assertDictEqual(x, y)
+        y = resolve2["lbry://@kauffj"]
+        self.assertResolveDictEqual(x, y)
 
         claim_g1 = await self.make_claim('gornado', '0.02', account_id=gorn1)
         claim_id2 = claim_g1['claim_id']
         await self.make_claim('gornado', '0.01', channel_name='@kauffj', account_id=kauffj1)
         y = await self.resolve("lbry://gornado")
         z = await self.resolve("lbry://@kauffj/gornado")
-        qq = y["lbry://@kauffj/gornado"]
+        qq = z["lbry://@kauffj/gornado"]
+
+    def assertResolveDictEqual(self, resolve_dict1, resolve_dict2):
+        if resolve_dict1['certificate'].get('valid_at_height'):
+            resolve_dict1['certificate'].pop('valid_at_height')
+
+        if resolve_dict2['certificate'].get('valid_at_height'):
+            resolve_dict2['certificate'].pop('valid_at_height')
+
+        self.assertDictEqual(resolve_dict1, resolve_dict2)
 
     async def get_account_ids(self):
         account_ids = list()
