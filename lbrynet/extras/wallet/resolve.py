@@ -56,7 +56,7 @@ class Resolver:
                                                        height, depth,
                                                        transaction_class=self.transaction_class,
                                                        hash160_to_address=self.hash160_to_address)
-                    # certificate_result['canonical_url'] = certificate_response['canonical_url']
+                    certificate_result['canonical_url'] = certificate_response['canonical_url']
                     result['certificate'] = await self.parse_and_validate_claim_result(certificate_result,
                                                                                        raw=raw)
             elif certificate_resolution_type == "claim_id":
@@ -80,7 +80,6 @@ class Resolver:
                 result['success'] = False
                 result['uri'] = str(parsed_uri)
 
-            self.add_canonical_url(result['certificate'], certificate_response['canonical_url'])
 
         else:
             certificate = None
@@ -146,6 +145,14 @@ class Resolver:
                 result['claims_in_channel'] = claims_in_channel
         elif 'error' not in result:
             return {'error': 'claim not found', 'success': False, 'uri': str(parsed_uri)}
+
+        #add canonical_url to claim result, the logic now is a little finicky, there can be a few edge cases..?
+        if result.get('claim') and result.get('certificate'):
+            claim_canonical_url = "{}/{}".format(
+                result['certificate']['canonical_url'],
+                result['claim']["name"]
+            )
+            result['claim']['canonical_url'] = claim_canonical_url
 
         # invalid signatures can only return outside a channel
         if result.get('claim', {}).get('has_signature', False):
