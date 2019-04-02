@@ -6,62 +6,62 @@ python: "3.7"
 jobs:
   include:
 
-    - stage: code quality
-      name: "pylint lbrynet"
-      install:
-        - pip install astroid pylint
-        - pip install git+https://github.com/lbryio/torba.git#egg=torba
-        - pip install -e .
-      script: pylint lbrynet
-
-    - stage: test
-      name: "Unit Tests"
-      install:
-        - pip install coverage
-        - pip install git+https://github.com/lbryio/torba.git#egg=torba
-        - pip install -e .
-      script:
-        - HOME=/tmp coverage run -p --source=lbrynet -m unittest discover -vv tests.unit
-      after_success:
-        - coverage combine
-        - bash <(curl -s https://codecov.io/bash)
-
-    - name: "Integration Tests"
-      install:
-        - pip install tox-travis coverage
-        - pushd .. && git clone https://github.com/lbryio/torba.git && popd
-      script: tox
-      after_success:
-        - coverage combine tests/
-        - bash <(curl -s https://codecov.io/bash)
-
-    - stage: build
-      name: "Windows"
-      language: generic
-      services:
-        - docker
-      install:
-        - docker pull lbry/pyinstaller34_32bits:py371
-      script:
-        - python scripts/set_build.py
-        - docker run -v "$(pwd):/src/lbry" lbry/pyinstaller34_32bits:py371 lbry/scripts/wine_build.sh
-        - sudo zip -j dist/lbrynet-windows.zip dist/lbrynet.exe
-      deploy:
-        provider: releases
-        api_key: $GITHUB_OAUTH_TOKEN
-        file: dist/lbrynet-windows.zip
-        skip_cleanup: true
-        overwrite: true
-        draft: true
-        on:
-          tags: true
-      addons:
-        artifacts:
-          working_dir: dist
-          paths:
-            - lbrynet-windows.zip
-          target_paths:
-            - /daemon/build-${TRAVIS_BUILD_NUMBER}_commit-${TRAVIS_COMMIT:0:7}_branch-${TRAVIS_BRANCH}$([ ! -z ${TRAVIS_TAG} ] && echo _tag-${TRAVIS_TAG})
+#    - stage: code quality
+#      name: "pylint lbrynet"
+#      install:
+#        - pip install astroid pylint
+#        - pip install git+https://github.com/lbryio/torba.git#egg=torba
+#        - pip install -e .
+#      script: pylint lbrynet
+#
+#    - stage: test
+#      name: "Unit Tests"
+#      install:
+#        - pip install coverage
+#        - pip install git+https://github.com/lbryio/torba.git#egg=torba
+#        - pip install -e .
+#      script:
+#        - HOME=/tmp coverage run -p --source=lbrynet -m unittest discover -vv tests.unit
+#      after_success:
+#        - coverage combine
+#        - bash <(curl -s https://codecov.io/bash)
+#
+#    - name: "Integration Tests"
+#      install:
+#        - pip install tox-travis coverage
+#        - pushd .. && git clone https://github.com/lbryio/torba.git && popd
+#      script: tox
+#      after_success:
+#        - coverage combine tests/
+#        - bash <(curl -s https://codecov.io/bash)
+#
+#    - stage: build
+#      name: "Windows"
+#      language: generic
+#      services:
+#        - docker
+#      install:
+#        - docker pull lbry/pyinstaller34_32bits:py371
+#      script:
+#        - python scripts/set_build.py
+#        - docker run -v "$(pwd):/src/lbry" lbry/pyinstaller34_32bits:py371 lbry/scripts/wine_build.sh
+#        - sudo zip -j dist/lbrynet-windows.zip dist/lbrynet.exe
+#      deploy:
+#        provider: releases
+#        api_key: $GITHUB_OAUTH_TOKEN
+#        file: dist/lbrynet-windows.zip
+#        skip_cleanup: true
+#        overwrite: true
+#        draft: true
+#        on:
+#          tags: true
+#      addons:
+#        artifacts:
+#          working_dir: dist
+#          paths:
+#            - lbrynet-windows.zip
+#          target_paths:
+#            - /daemon/build-${TRAVIS_BUILD_NUMBER}_commit-${TRAVIS_COMMIT:0:7}_branch-${TRAVIS_BRANCH}$([ ! -z ${TRAVIS_TAG} ] && echo _tag-${TRAVIS_TAG})
 
     - &build
       name: "Linux"
@@ -69,6 +69,7 @@ jobs:
       install:
         - pip3 install pyinstaller
         - pip3 install git+https://github.com/lbryio/torba.git
+        - git describe --exact-match --all
         - python scripts/set_build.py
         - pip3 install -e .
       script:
